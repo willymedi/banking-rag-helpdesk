@@ -256,7 +256,7 @@ STRIDE es una metodología de análisis de amenazas de Microsoft. Cada letra rep
 
 - **Streaming SSE solo a nivel de nodos** del grafo (sanitize → injection_check → ...). Token-by-token de la respuesta del LLM no implementado end-to-end. Productivo: integrar `astream` de LangGraph + protocolo Vercel AI SDK.
 - **Reranker deshabilitado** por default (corpus chico). Activar con `ENABLE_RERANKER=true` cuando KB crezca.
-- **Multi-turno no soportado** (single-shot Q&A). Productivo: agregar `checkpointer=RedisSaver()` a LangGraph.
+- **Multi-turno no soportado** (single-shot Q&A): cada pregunta es independiente, el sistema no recuerda mensajes anteriores de la misma conversación. Si el usuario pregunta "¿Y si maneja datos sensibles?" después de preguntar por microservicios, el sistema no sabe a qué se refiere. Productivo: agregar `checkpointer=RedisSaver()` a LangGraph — persiste el estado del grafo por `thread_id` y permite conversaciones con contexto acumulado.
 - **RBAC (Role-Based Access Control — control de acceso por rol) removido del prototipo**: la separación por dominio (architecture/security/production) era artificial — un architect bancario debe poder leer lineamientos de seguridad. Lo dejamos como mejora futura, con criterio basado en *sensibilidad* del documento, no dominio.
 - **Trazas Langfuse opcionales**: requieren configurar `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` en `.env`. Sin claves el sistema cae a `NullTracer` automáticamente. Productivo: namespace separado por ambiente o migrar a Datadog APM.
 - **Auth simulada**: `X-API-Key` mock. Productivo: JWT IdP + verificación en middleware.
