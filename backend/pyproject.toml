@@ -1,0 +1,90 @@
+[project]
+name = "mesa-ayuda-ia"
+version = "0.1.0"
+description = "Mesa de ayuda IA bancaria con agentes especializados (RAG + LangGraph)"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+  "openai>=1.55",
+  "langgraph>=0.2.50",
+  "langchain-core>=0.3",
+  "chromadb>=0.5.20",
+  "tiktoken>=0.8",
+  "rank-bm25>=0.2.2",
+  # "sentence-transformers>=3.3",  # only needed if ENABLE_RERANKER=true; pulls torch+CUDA (~3GB)
+  "presidio-analyzer>=2.2",
+  "spacy>=3.7",
+  "structlog>=24.4",
+  "slowapi>=0.1.9",
+  "langfuse>=2.55,<3",
+  "httpx>=0.27",
+  "sse-starlette>=2.1",
+  "tenacity>=9.0",
+  "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "pytest-mock>=3.14",
+  "ruff>=0.7",
+  "import-linter>=2.1",
+  "ragas>=0.2.3",
+  "datasets>=3.1",
+  "pandas>=2.2",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N"]
+ignore = ["E501"]
+
+[tool.importlinter]
+root_package = "src"
+
+[[tool.importlinter.contracts]]
+name = "Domain has no outward dependencies"
+type = "forbidden"
+source_modules = ["src.domain"]
+forbidden_modules = ["src.application", "src.infrastructure", "src.api"]
+
+[[tool.importlinter.contracts]]
+name = "Application does not import infrastructure or api"
+type = "forbidden"
+source_modules = ["src.application"]
+forbidden_modules = ["src.infrastructure", "src.api"]
+
+[[tool.importlinter.contracts]]
+name = "Infrastructure does not import api or application use_cases"
+type = "forbidden"
+source_modules = ["src.infrastructure"]
+forbidden_modules = ["src.api", "src.application.use_cases"]
+
+[[tool.importlinter.contracts]]
+name = "Layered architecture order"
+type = "layers"
+layers = [
+  "src.api",
+  "src.infrastructure",
+  "src.application",
+  "src.domain",
+]

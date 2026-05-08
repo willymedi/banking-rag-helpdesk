@@ -1,0 +1,17 @@
+{
+  "01_estandares_arquitectura_microservicios.txt": {
+    "doc_id": "doc_arquitectura",
+    "title": "Estándares de Arquitectura y Microservicios",
+    "domain": "architecture"
+  },
+  "02_lineamientos_seguridad_apis.txt": {
+    "doc_id": "doc_seguridad",
+    "title": "Lineamientos de Seguridad para APIs",
+    "domain": "security"
+  },
+  "03_checklist_paso_produccion.txt": {
+    "doc_id": "doc_produccion",
+    "title": "Checklist de Paso a Producción",
+    "domain": "production"
+  }
+}

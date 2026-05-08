@@ -1,0 +1,92 @@
+DOCUMENTO 3: CHECKLIST DE PASO A PRODUCCIÓN
+Versión: 1.0
+Uso: Documento ficticio para prueba técnica de aspirantes a Desarrollador Senior IA
+
+1. OBJETIVO
+Este documento define los criterios mínimos que debe cumplir una solución antes de ser desplegada en ambiente productivo.
+
+2. ALCANCE
+Aplica para microservicios, APIs internas, integraciones, componentes backend, soluciones de IA, agentes de IA y automatizaciones que serán utilizadas por equipos internos o consumidores del Banco.
+
+3. CRITERIOS FUNCIONALES
+- La solución debe contar con aprobación funcional del líder de negocio o solicitante autorizado.
+- Los casos de uso principales deben estar validados.
+- Las reglas de negocio críticas deben estar documentadas.
+- Debe existir evidencia de pruebas funcionales exitosas.
+- Los defectos críticos o bloqueantes deben estar cerrados antes del despliegue.
+
+4. CRITERIOS TÉCNICOS
+- El código debe estar versionado en el repositorio autorizado.
+- La solución debe compilar o desplegar correctamente en los ambientes definidos.
+- Las variables de entorno deben estar configuradas por ambiente.
+- No deben existir secretos en código fuente.
+- Las dependencias críticas deben estar identificadas.
+- Debe existir documentación técnica mínima.
+
+5. PRUEBAS REQUERIDAS
+Antes de producción, se debe contar con evidencia de:
+- Pruebas unitarias.
+- Pruebas de integración.
+- Pruebas funcionales.
+- Pruebas de regresión cuando aplique.
+- Pruebas de seguridad cuando la solución exponga o consuma información sensible.
+- Pruebas de rendimiento cuando el volumen esperado sea alto o crítico.
+
+6. REVISIÓN DE SEGURIDAD
+- La solución debe pasar revisión de seguridad cuando maneje datos sensibles, credenciales, información financiera o integraciones críticas.
+- Debe validarse que no se registren datos sensibles en logs.
+- Debe verificarse la autenticación y autorización.
+- Debe revisarse el manejo seguro de secretos.
+- Para soluciones de IA, debe revisarse el manejo de prompts, respuestas, documentos y datos enviados al modelo.
+
+7. APROBACIÓN DE ARQUITECTURA
+- La solución debe contar con aprobación de arquitectura cuando introduzca nuevos componentes, patrones, integraciones o tecnologías.
+- Deben estar identificadas las dependencias con otros sistemas.
+- Debe existir diagrama de arquitectura o explicación técnica equivalente.
+- Deben documentarse decisiones relevantes y restricciones conocidas.
+
+8. PLAN DE DESPLIEGUE
+- Debe existir una ventana de despliegue confirmada.
+- Deben estar definidos los responsables técnicos y funcionales.
+- Deben estar preparados los pasos de despliegue.
+- Deben estar identificados los servicios impactados.
+- Deben existir validaciones posteriores al despliegue.
+
+9. PLAN DE ROLLBACK
+- Toda solución debe contar con un plan de rollback documentado.
+- El plan debe indicar condiciones para activar rollback.
+- Debe definir responsables y pasos para regresar a la versión anterior.
+- Debe considerar reversión de configuración, servicios, base de datos o integraciones cuando aplique.
+
+10. MONITOREO POSTERIOR AL DESPLIEGUE
+- Después del despliegue, se debe monitorear disponibilidad, errores y tiempos de respuesta.
+- Deben revisarse logs técnicos durante la ventana posterior al despliegue.
+- Deben validarse los casos de uso principales en producción.
+- Para soluciones de IA, se recomienda monitorear consultas, respuestas no satisfactorias, errores del modelo y consumo de tokens.
+
+11. CHECKLIST MÍNIMO PARA APIs Y MICROSERVICIOS
+Antes de pasar a producción, una API o microservicio debe contar con:
+- Aprobación funcional.
+- Swagger/OpenAPI actualizado.
+- Health check implementado.
+- Manejo de errores controlado.
+- CorrelationId en logs.
+- Pruebas unitarias e integración.
+- Variables de entorno configuradas.
+- Secretos protegidos.
+- Revisión de seguridad si maneja datos sensibles.
+- Plan de rollback.
+- Monitoreo posterior al despliegue.
+
+12. CHECKLIST MÍNIMO PARA SOLUCIONES DE IA
+Antes de pasar a producción, una solución de IA debe contar con:
+- Caso de uso aprobado.
+- Alcance funcional definido.
+- Base de conocimiento o fuentes autorizadas.
+- Control para evitar respuestas sin sustento.
+- Trazabilidad de documentos consultados.
+- Validación de seguridad y privacidad.
+- Manejo seguro de prompts y respuestas.
+- Métricas de uso, errores y costos.
+- Plan de monitoreo y mejora continua.
+- Mecanismo para recibir feedback de usuarios.

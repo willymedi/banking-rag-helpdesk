@@ -1,0 +1,113 @@
+services:
+  chroma:
+    image: chromadb/chroma:1.0.15
+    container_name: mesa-chroma
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/data
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+
+  langfuse-db:
+    image: postgres:16-alpine
+    container_name: mesa-langfuse-db
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: langfuse
+      POSTGRES_DB: langfuse
+    volumes:
+      - langfuse_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "langfuse"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: mesa-langfuse
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://langfuse:langfuse@langfuse-db:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET:-mesa-langfuse-secret-change-me}
+      SALT: ${LANGFUSE_SALT:-mesa-langfuse-salt-change-me}
+      TELEMETRY_ENABLED: "false"
+      LANGFUSE_INIT_ORG_ID: mesa
+      LANGFUSE_INIT_PROJECT_ID: mesa-ayuda-ia
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-pk-lf-mesa-public}
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-sk-lf-mesa-secret}
+      LANGFUSE_INIT_USER_EMAIL: admin@mesa.local
+      LANGFUSE_INIT_USER_PASSWORD: admin1234
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://$$(hostname -i):3000/api/public/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mesa-api
+    depends_on:
+      chroma:
+        condition: service_started
+      langfuse:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      CHROMA_HOST: chroma
+      CHROMA_PORT: "8000"
+      LANGFUSE_HOST: http://langfuse:3000
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-pk-lf-mesa-public}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-sk-lf-mesa-secret}
+      API_KEY: ${API_KEY:-mesa-demo-key}
+      ENABLE_RERANKER: ${ENABLE_RERANKER:-false}
+      CONFIDENCE_THRESHOLD: ${CONFIDENCE_THRESHOLD:-0.65}
+      DOCS_PATH: /app/docs_kb
+      DB_PATH: /app/data/feedback.db
+      LOG_LEVEL: INFO
+      RATE_LIMIT_PER_MIN: "10"
+      UVICORN_RELOAD: "true"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/scripts:/app/scripts
+      - ./backend/tests:/app/tests
+      - ./docs_kb:/app/docs_kb:ro
+      - ./eval:/app/eval
+      - feedback_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mesa-frontend
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      BACKEND_URL: http://api:8080
+      API_KEY: ${API_KEY:-mesa-demo-key}
+
+volumes:
+  chroma_data:
+  langfuse_pg:
+  feedback_data:

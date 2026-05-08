@@ -1,0 +1,75 @@
+DOCUMENTO 2: LINEAMIENTOS DE SEGURIDAD PARA APIs Y SOLUCIONES IA
+Versión: 1.0
+Uso: Documento ficticio para prueba técnica de aspirantes a Desarrollador Senior IA
+
+1. OBJETIVO
+Este documento define controles mínimos de seguridad para APIs internas, microservicios y soluciones de IA utilizadas dentro del Banco.
+
+2. ALCANCE
+Aplica para APIs internas, microservicios, integraciones, asistentes virtuales, agentes de IA, soluciones RAG y cualquier componente que procese información interna o sensible.
+
+3. AUTENTICACIÓN Y AUTORIZACIÓN
+- Toda API interna debe autenticarse mediante OAuth2, JWT o el mecanismo corporativo definido.
+- No se deben exponer endpoints internos sin autenticación.
+- La autorización debe aplicarse de acuerdo con el perfil, rol o permiso del usuario o sistema consumidor.
+- Se debe aplicar el principio de mínimo privilegio.
+- Las credenciales de servicio deben tener permisos limitados a la función requerida.
+
+4. MANEJO DE SECRETOS
+- Los secretos no deben almacenarse en código fuente.
+- No se deben subir API keys, tokens, certificados o contraseñas a repositorios de código.
+- Las credenciales deben gestionarse mediante un gestor seguro de secretos o mecanismo corporativo equivalente.
+- Las variables sensibles deben configurarse por ambiente y no deben registrarse en logs.
+
+5. PROTECCIÓN DE INFORMACIÓN SENSIBLE
+- No se debe registrar información sensible en logs.
+- Se considera información sensible: números de identificación, cuentas, tarjetas, credenciales, claves, tokens, información financiera, datos personales y cualquier dato protegido por normativa interna o externa.
+- Cuando se requiera soporte o diagnóstico, la información sensible debe enmascararse.
+- El enmascaramiento debe conservar únicamente lo mínimo necesario para análisis técnico.
+
+6. AUDITORÍA Y TRAZABILIDAD
+- Todo acceso a información sensible debe quedar auditado.
+- Los logs de auditoría deben registrar usuario o sistema, fecha, acción realizada, recurso consultado y resultado de la operación.
+- La auditoría no debe almacenar datos sensibles completos.
+- Para soluciones de IA, se debe poder identificar qué usuario ejecutó una consulta y qué documentos fueron utilizados como contexto.
+
+7. SEGURIDAD EN SOLUCIONES DE IA
+- Las soluciones de IA no deben enviar información sensible a proveedores externos sin evaluación y aprobación previa.
+- Se debe validar si el proveedor utiliza la información enviada para entrenamiento de modelos.
+- Se deben aplicar controles para evitar fuga de información en prompts y respuestas.
+- Las respuestas de IA deben limitarse al alcance autorizado del caso de uso.
+- Cuando el modelo no tenga información suficiente, debe responder que no puede contestar con la base disponible.
+
+8. GUARDRAILS Y VALIDACIONES
+- Las soluciones de IA deben incluir controles de entrada y salida cuando procesen información interna.
+- Se deben bloquear o alertar consultas que intenten extraer información sensible no autorizada.
+- Se recomienda validar que la respuesta generada esté basada en fuentes autorizadas.
+- Los agentes de IA no deben ejecutar acciones críticas sin autorización explícita y control humano cuando aplique.
+
+9. CONTROL DE ACCESO DOCUMENTAL EN RAG
+- En soluciones RAG, los documentos deben tener metadatos de clasificación y permisos.
+- La búsqueda semántica debe filtrar documentos según el perfil autorizado del usuario.
+- Un usuario no debe recibir contenido proveniente de documentos a los que no tiene acceso.
+- La respuesta debe citar la fuente utilizada cuando aplique.
+
+10. LOGGING SEGURO EN IA
+- Se permite registrar información técnica como fecha, usuario, caso de uso, modelo utilizado, cantidad de tokens, agente invocado y estado de la respuesta.
+- No se debe registrar el prompt completo si contiene información sensible.
+- No se debe registrar la respuesta completa si contiene información sensible o datos de clientes.
+- Se recomienda anonimizar o resumir los datos registrados para fines de monitoreo.
+
+11. VALIDACIONES ANTES DE PRODUCCIÓN
+Antes de pasar a producción una API o solución IA, debe verificarse:
+- Autenticación habilitada.
+- Autorización por roles o perfiles.
+- Secretos protegidos.
+- Logs sin datos sensibles.
+- Auditoría habilitada cuando se acceda a información crítica.
+- Revisión de seguridad completada.
+- Evaluación de riesgos para casos de uso IA.
+
+12. RESPUESTA ANTE INCIDENTES
+- Ante una posible fuga de información, se debe activar el procedimiento interno de incidentes de seguridad.
+- Deben preservarse evidencias técnicas.
+- Debe identificarse el usuario, servicio, fecha, datos potencialmente expuestos y causa raíz.
+- Deben aplicarse acciones correctivas antes de restablecer el servicio si el riesgo continúa activo.

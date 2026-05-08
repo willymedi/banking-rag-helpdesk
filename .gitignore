@@ -1,0 +1,47 @@
+# Env
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+build/
+*.log
+
+# Data
+*.db
+*.sqlite
+*.sqlite3
+backend/data/
+frontend/.next/
+
+# Eval reports
+eval/reports/*.html
+eval/reports/*.json
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Docker
+.docker/

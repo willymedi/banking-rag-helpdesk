@@ -1,0 +1,73 @@
+DOCUMENTO 1: ESTÁNDARES DE ARQUITECTURA Y MICROSERVICIOS
+Versión: 1.0
+Uso: Documento ficticio para prueba técnica de aspirantes a Desarrollador Senior IA
+
+1. OBJETIVO
+Este documento define los lineamientos mínimos que deben cumplir los microservicios y APIs internas antes de ser expuestos o integrados dentro del ecosistema tecnológico del Banco.
+
+2. ALCANCE
+Aplica para microservicios, APIs internas, servicios de integración, componentes backend y soluciones expuestas mediante API Gateway, bus de integración o mecanismos equivalentes.
+
+3. LINEAMIENTOS GENERALES DE ARQUITECTURA
+- Todo microservicio debe tener una responsabilidad claramente definida.
+- Se debe evitar que un microservicio concentre múltiples dominios funcionales sin justificación técnica.
+- Las APIs deben diseñarse bajo principios REST o el estándar definido por Arquitectura Empresarial.
+- Todo endpoint debe documentarse utilizando Swagger/OpenAPI.
+- Toda solución debe contar con documentación técnica mínima que explique propósito, entradas, salidas, dependencias y responsables.
+
+4. HEALTH CHECK Y DISPONIBILIDAD
+- Todo microservicio debe exponer un endpoint de health check.
+- El health check debe permitir identificar si el servicio está disponible.
+- Cuando aplique, debe validar dependencias críticas como base de datos, colas, servicios externos o componentes de seguridad.
+- El endpoint de health check no debe exponer información sensible.
+
+5. TRAZABILIDAD Y LOGS
+- Todo microservicio debe manejar correlationId para permitir trazabilidad de extremo a extremo.
+- El correlationId debe propagarse entre servicios cuando existan llamadas internas.
+- Los logs deben incluir información técnica suficiente para diagnóstico sin exponer datos sensibles.
+- Los errores deben registrarse con detalle técnico controlado, evitando datos personales, credenciales o información financiera.
+
+6. MANEJO DE ERRORES
+- Las APIs deben devolver códigos HTTP consistentes y adecuados.
+- Los errores funcionales y técnicos deben diferenciarse claramente.
+- No se deben exponer trazas internas, stack traces o detalles de infraestructura al consumidor de la API.
+- Se debe definir una estructura estándar de respuesta de error.
+
+7. TIMEOUTS, RETRIES E IDEMPOTENCIA
+- Toda llamada a servicios externos o dependencias críticas debe tener timeout configurado.
+- Los retries deben ser controlados y no infinitos.
+- Los retries deben considerar backoff cuando aplique.
+- En operaciones transaccionales o críticas, debe evaluarse idempotencia para evitar duplicidad de operaciones.
+
+8. PRUEBAS TÉCNICAS
+- Todo microservicio debe contar con pruebas unitarias para reglas de negocio relevantes.
+- Deben existir pruebas de integración cuando el servicio consuma bases de datos, colas, APIs internas o servicios externos.
+- Para APIs críticas, se recomienda incluir pruebas de regresión automatizadas.
+- La evidencia de pruebas debe estar disponible antes del paso a producción.
+
+9. OBSERVABILIDAD
+- Los microservicios deben exponer métricas básicas de disponibilidad, latencia y errores.
+- Se recomienda monitorear tiempo de respuesta, tasa de error, consumo de recursos y dependencias críticas.
+- Cuando aplique, deben generarse alertas para errores recurrentes o indisponibilidad.
+
+10. DOCUMENTACIÓN API
+- Toda API debe contar con contrato actualizado.
+- El contrato debe incluir endpoints, métodos, parámetros, códigos de respuesta y ejemplos de uso.
+- La documentación debe mantenerse actualizada ante cambios de versión.
+
+11. CRITERIOS MÍNIMOS ANTES DE EXPONER UNA API INTERNA
+Antes de exponer una API interna, debe cumplir como mínimo con:
+- Documentación Swagger/OpenAPI.
+- Health check implementado.
+- Manejo de correlationId.
+- Manejo controlado de errores.
+- Timeouts configurados.
+- Pruebas unitarias e integración.
+- Revisión de seguridad cuando consuma o exponga información sensible.
+- Validación de variables de entorno y configuración por ambiente.
+
+12. CONSIDERACIONES PARA SOLUCIONES DE IA
+- Los servicios que consuman modelos de IA deben manejar timeouts y errores del proveedor.
+- Se debe registrar el identificador de la transacción, caso de uso, modelo utilizado y resultado técnico de la invocación.
+- No se debe registrar el contenido completo del prompt si contiene información sensible.
+- El consumo de tokens o costo estimado debe ser monitoreado cuando aplique.

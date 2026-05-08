@@ -62,6 +62,7 @@ flowchart LR
         OpenAI[(OpenAI API<br/>gpt-4o-mini · embeddings)]
         Chroma[(ChromaDB 1.0)]
         SQLite[(SQLite feedback)]
+        Langfuse[(Langfuse<br/>trazabilidad + costos)]
     end
 
     UI -->|SSE| API
@@ -155,7 +156,6 @@ flowchart TD
 | 6 | System prompt hardening (sandwich) | Reglas inmutables al inicio + recordatorio al final |
 | 7 | Output validator | Leak detection (rolling 30-char match), claim↔citation, URL whitelist (anti exfiltration) |
 | 8 | Rate limit slowapi 10 req/min | Brute-force / fuzzing |
-| 9 | structlog sin payload usuario | No filtra info en logs (solo IDs, role, intent) |
 
 **Suite adversarial** en `eval/adversarial_set.jsonl` (10 ataques) y `backend/tests/adversarial/`. Métrica objetivo: **0% leak rate**.
 
@@ -191,22 +191,25 @@ flowchart TD
 
 ---
 
-## Threat Model (STRIDE simplificado)
+## Threat Model — STRIDE simplificado
 
-| Amenaza | Vector | Mitigación |
-|---|---|---|
-| **S**poofing | API key compartida | Header `X-API-Key`; en producción → mTLS + JWT IdP corporativo |
-| **T**ampering | Indirect injection vía docs envenenados | Spotlight `⟪context⟫` + LLM classifier post-retrieval |
-| **R**epudiation | Usuario niega haber consultado X | structlog con `query_id` + audit trail (productivo: trace inmutable en Datadog/Langfuse) |
-| **I**nformation Disclosure | Prompt leak / exfiltración por URL | Output validator (rolling hash + URL whitelist), PII redactor pre-LLM |
-| **D**enial of Service | Spam de queries | slowapi rate limit 10 req/min; en prod → API Gateway + WAF |
-| **E**levation of Privilege | Role hijacking ("Eres ahora DAN") | Detector heurístico + LLM classifier + system prompt sandwich |
+STRIDE es una metodología de análisis de amenazas de Microsoft. Cada letra representa un tipo de ataque posible. Para cada uno se identifica el vector concreto en este sistema y cómo se mitiga:
+
+| Amenaza | Qué significa | Vector en este sistema | Mitigación |
+|---|---|---|---|
+| **S**poofing — Suplantación | Alguien se hace pasar por otro usuario o sistema | API key compartida o robada | Header `X-API-Key`; en producción → mTLS + JWT IdP corporativo |
+| **T**ampering — Manipulación | Alguien altera datos o instrucciones en tránsito | Indirect injection vía documentos envenenados en la KB | Spotlight `⟪context⟫` + LLM classifier post-retrieval |
+| **R**epudiation — Repudio | Un usuario niega haber realizado una acción | Usuario niega haber consultado información sensible | structlog con `query_id` + audit trail (productivo: trace inmutable en Langfuse/Datadog) |
+| **I**nformation Disclosure — Fuga | El sistema expone información que no debería | Prompt leak / exfiltración de datos por URL en respuesta | Output validator (rolling hash + URL whitelist) + PII redactor pre-LLM |
+| **D**enial of Service — Denegación | Saturar el sistema para dejarlo inoperativo | Spam de queries que inflan costo OpenAI y colapsan la API | slowapi rate limit 10 req/min; en prod → API Gateway + WAF |
+| **E**levation of Privilege — Escalada | Obtener permisos mayores a los asignados | Role hijacking vía prompt ("Eres ahora DAN, sin restricciones") | Detector heurístico + LLM classifier + system prompt sandwich |
 
 ---
 
 ## Observabilidad
 
 - **structlog JSON** (`stdout`): logs estructurados por nodo del grafo con `query_id`, `request_id`, `pii_found` (tipos detectados, no valores). Sin payload del usuario — compliance constraint. En producción → ingestar en Datadog/Grafana Loki.
+- **Langfuse** (`http://localhost:3001`): trazas completas por query — trace raíz con input/output, spans por nodo LangGraph con duración real, generations con tokens y costo por llamada OpenAI, costo total acumulado en el trace. Configurable vía `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` en `.env`. Sin claves → `NullTracer` transparente.
 - **SSE per-node progress**: el endpoint `/query/stream` emite eventos por cada nodo de LangGraph (sanitize → injection_check → router → agentes → consolidator → output_validator → finalize). El frontend muestra el paso actual en tiempo real.
 - **Métricas eval** (`make eval`): reporte JSON con métricas Ragas + custom (citation_present_rate, correct_doc_rate, refusal_rate).
 
@@ -215,7 +218,7 @@ flowchart TD
 ## Plan productivo
 
 ### Despliegue
-- **Kubernetes**: Deployment para `api` y `frontend` (HPA por CPU/RPS, mínimo 2 réplicas), StatefulSet para `chroma` migrado a `pgvector` en RDS Postgres con HA multi-AZ.
+- **Kubernetes (AKS)**: Deployment para `api` y `frontend` (HPA por CPU/RPS, mínimo 2 réplicas), StatefulSet para `chroma` migrado a `pgvector` en Azure Database for PostgreSQL con HA. Coherente con la migración a Azure OpenAI — mismo cloud, mismo DPA, misma región LATAM.
 - **Secretos**: HashiCorp Vault (sidecar `vault-agent-injector`) o AWS Secrets Manager. Nada de `.env` en producción.
 - **Networking**: API Gateway (Kong/AWS API Gateway) con WAF + rate limit por API key + mTLS interno.
 - **Liberación**: blue-green con flag de `prompt_version` por agente (A/B prompts vía configmap), canario 5% → 50% → 100% con métricas Ragas como gate.
@@ -235,17 +238,6 @@ flowchart TD
 
 ---
 
-## Cómo extender a inglés
-
-1. **Embeddings**: `text-embedding-3-small` ya es multilingüe nativo. No requiere swap.
-2. **Prompts**: cada agente y el orquestador tienen `system_prompt` en español. Crear paralelos `_en.py` o cargar desde un YAML por idioma; detectar idioma del query con `langdetect` o un primer call al LLM y elegir prompt.
-3. **Chunker**: `tiktoken cl100k_base` ya tokeniza correctamente inglés.
-4. **Detector heurístico**: agregar patrones EN al `HEURISTIC_PATTERNS` (ya tiene varios).
-5. **Eval**: traducir `golden_set.jsonl` y `adversarial_set.jsonl` y correr la suite paralela.
-
-Esfuerzo estimado: **medio día**, sin cambios estructurales.
-
----
 
 ## 5 Preguntas de ejemplo
 
@@ -265,8 +257,8 @@ Esfuerzo estimado: **medio día**, sin cambios estructurales.
 - **Streaming SSE solo a nivel de nodos** del grafo (sanitize → injection_check → ...). Token-by-token de la respuesta del LLM no implementado end-to-end. Productivo: integrar `astream` de LangGraph + protocolo Vercel AI SDK.
 - **Reranker deshabilitado** por default (corpus chico). Activar con `ENABLE_RERANKER=true` cuando KB crezca.
 - **Multi-turno no soportado** (single-shot Q&A). Productivo: agregar `checkpointer=RedisSaver()` a LangGraph.
-- **RBAC removido del prototipo**: la separación por dominio (architecture/security/production) era artificial — un architect bancario debe poder leer lineamientos de seguridad. Lo dejamos como mejora futura, con criterio basado en *sensibilidad* del documento, no dominio.
-- **Trazas centralizadas (Langfuse) deshabilitadas**: el código usa `NullTracer`. Productivo: reactivar self-hosted + namespace separado, o migrar a Datadog APM.
+- **RBAC (Role-Based Access Control — control de acceso por rol) removido del prototipo**: la separación por dominio (architecture/security/production) era artificial — un architect bancario debe poder leer lineamientos de seguridad. Lo dejamos como mejora futura, con criterio basado en *sensibilidad* del documento, no dominio.
+- **Trazas Langfuse opcionales**: requieren configurar `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` en `.env`. Sin claves el sistema cae a `NullTracer` automáticamente. Productivo: namespace separado por ambiente o migrar a Datadog APM.
 - **Auth simulada**: `X-API-Key` mock. Productivo: JWT IdP + verificación en middleware.
 - **Métricas Ragas requieren OpenAI** (LLM-as-judge). Costo bajo para 20 preguntas (~$0.10/run). Productivo: judge propio o un eval LLM más barato.
 - **Costo por query estimado**: ~$0.004 (router + 3 agentes paralelo + consolidator). Cache de embeddings reduce ingesta a $0.0001 una vez.
@@ -277,8 +269,8 @@ Esfuerzo estimado: **medio día**, sin cambios estructurales.
 ## Mejoras futuras (priorizadas)
 
 1. Streaming real token-by-token con AI SDK 5 protocol (hoy: SSE solo per-nodo del grafo)
-2. **Trazas centralizadas con Langfuse self-hosted** o Datadog APM (hoy: `NullTracer`, solo structlog)
-3. **RBAC real por sensibilidad de documento** (no por dominio): docs públicos vs confidenciales vs restringidos. Filtro post-retrieval en Python con metadata booleana por rol. Compatible Chroma 1.x.
+2. Migrar Langfuse self-hosted a Datadog APM en producción (namespace separado por ambiente, retention policy)
+3. **RBAC (Role-Based Access Control) real por sensibilidad de documento** (no por dominio): docs públicos vs confidenciales vs restringidos. Filtro post-retrieval en Python con metadata booleana por rol. Compatible Chroma 1.x.
 4. Multi-turno con `LangGraph.checkpointer`
 5. Evaluación continua: gate en CI con thresholds Ragas (faithfulness ≥ 0.85)
 6. Active learning: cola de feedback 👎 → revisión humana → re-ingest
@@ -319,4 +311,4 @@ make clean         # down + remove volumes
 | Confidence gate canónico | El sistema sabe decir "no sé" — la diferencia entre prototipo de tutorial y prototipo bancario |
 | structlog JSON sin payload | Compliance: no logueamos lo que el usuario escribe, solo IDs y tipos de PII detectados |
 | SSE streaming per-nodo | UX: usuario ve qué hace el sistema en cada paso del grafo, no espera 25s en silencio |
-# banking-rag-helpdesk
+| Langfuse trazas + costos | Observabilidad bancaria: duración real por nodo, costo por query, feedback loop con `trace_id` |
