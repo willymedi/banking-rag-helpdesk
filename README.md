@@ -4,7 +4,7 @@ Prototipo de mesa de ayuda IA para Desarrollo TI con **agentes especializados** 
 
 ## Demo
 
-[![Ver demo en Loom](https://cdn.loom.com/sessions/thumbnails/11bac8e48c214174a494ca2dcf649507-with-play.gif)](https://www.loom.com/share/11bac8e48c214174a494ca2dcf649507)
+▶️ [Ver demo en Loom](https://www.loom.com/share/11bac8e48c214174a494ca2dcf649507)
 
 ---
 
