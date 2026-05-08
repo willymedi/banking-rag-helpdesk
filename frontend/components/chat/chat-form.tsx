@@ -181,12 +181,23 @@ export function ChatForm() {
         className="p-3 border-t border-[var(--color-border)]"
       >
         <div className="max-w-3xl mx-auto flex gap-2">
-          <input
+          <textarea
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Tu consulta técnica…"
+            onChange={(e) => {
+              setInput(e.target.value);
+              e.target.style.height = "auto";
+              e.target.style.height = `${e.target.scrollHeight}px`;
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send(input);
+              }
+            }}
+            placeholder="Tu consulta técnica… (Enter para enviar, Shift+Enter para nueva línea)"
             disabled={busy}
-            className="flex-1 bg-[var(--color-panel)] border border-[var(--color-border)] rounded-md px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]"
+            rows={2}
+            className="flex-1 bg-[var(--color-panel)] border border-[var(--color-border)] rounded-md px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)] resize-none overflow-hidden min-h-[42px] max-h-[200px]"
           />
           <button
             type="submit"
