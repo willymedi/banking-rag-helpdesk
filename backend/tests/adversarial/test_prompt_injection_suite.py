@@ -17,7 +17,7 @@ import pytest
 
 from src.application.security.injection_detector import HEURISTIC_PATTERNS, normalize_input
 
-ADV = Path(__file__).resolve().parents[2].parent / "eval" / "adversarial_set.jsonl"
+ADV = Path(__file__).resolve().parents[2] / "eval" / "adversarial_set.jsonl"
 
 
 def _heuristic_blocks(text: str) -> bool:
@@ -27,7 +27,7 @@ def _heuristic_blocks(text: str) -> bool:
 
 def _load_cases() -> list[dict]:
     if not ADV.exists():
-        pytest.skip(f"adversarial set not found at {ADV}")
+        pytest.skip(f"adversarial set not found at {ADV}", allow_module_level=True)
     with ADV.open() as f:
         return [json.loads(line) for line in f if line.strip()]
 

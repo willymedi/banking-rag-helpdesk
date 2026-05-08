@@ -15,7 +15,7 @@ def test_chunker_respects_section_boundaries():
         text=DOC,
         domain="architecture",
         allowed_roles=("dev",),
-        config=ChunkerConfig(target_tokens=200, overlap_tokens=20),
+        config=ChunkerConfig(target_tokens=200, overlap_tokens=20, min_chunk_tokens=10),
     )
     assert len(chunks) >= 2
     titles = {c.section_title for c in chunks}

@@ -23,9 +23,9 @@ HEURISTIC_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("system_tag", re.compile(r"(?i)\bsystem\s*:\s*you\s+are")),
     ("prompt_leak", re.compile(r"(?i)(repite|repeat|print|show|reveal|imprim[ií]|mostr[aá])\s+(me\s+)?(your|tu)\s+(system\s+)?(prompt|instructions|instrucciones)")),
     ("prompt_leak", re.compile(r"(?i)(palabra\s+por\s+palabra|word\s+for\s+word|verbatim).*(prompt|instruction|instrucci[oó]n)")),
-    ("base64_smuggling", re.compile(r"(?i)\b(decod[a-z]*|decode|base[\s-]?64)\b.*[A-Za-z0-9+/=]{20,}")),
+    ("base64_smuggling", re.compile(r"(?i)\b(decod\w*|decode|base[\s-]?64)\b.*[A-Za-z0-9+/=]{20,}")),
     ("base64_smuggling", re.compile(r"^[A-Za-z0-9+/=\s]{40,}$")),
-    ("data_exfiltration", re.compile(r"(?i)\blist[a-z]*\s+(all|todos?)\s+(doc|documents|documentos|chunks?|files?)\b")),
+    ("data_exfiltration", re.compile(r"(?i)\blist\w*\s+(all|todos?)\s+(los\s+)?(doc|documents|documentos|chunks?|files?|ids?)\w*\b")),
     ("data_exfiltration", re.compile(r"(?i)dame\s+(todos\s+)?los\s+(documentos|chunks?|ids?)")),
 )
 

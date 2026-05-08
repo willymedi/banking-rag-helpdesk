@@ -10,16 +10,45 @@ Prototipo de mesa de ayuda IA para Desarrollo TI con **agentes especializados** 
 
 ## TL;DR — Cómo correrlo
 
+### 1. Configurar variables de entorno
+
 ```bash
 cp .env.example .env
-# Editar .env y completar OPENAI_API_KEY=sk-...
-
-docker compose up --build
-# API:       http://localhost:8080  (POST /query, /query/stream, /feedback)
-# Frontend:  http://localhost:3000  (chat con SSE per-node progress)
 ```
 
-Smoke test:
+Editar `.env` y completar las claves:
+
+```env
+# Obligatorio
+OPENAI_API_KEY=sk-...
+
+# Opcional — activa trazabilidad en Langfuse (http://localhost:3001)
+# Sin estas claves el sistema funciona igual pero sin trazas
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+```
+
+### 2. Levantar todos los servicios
+
+```bash
+docker compose up --build
+```
+
+| Servicio | URL | Descripción |
+|---|---|---|
+| API | http://localhost:8080 | FastAPI — endpoints `/query`, `/query/stream`, `/feedback` |
+| Frontend | http://localhost:3000 | Chat con streaming SSE per-nodo |
+| Langfuse | http://localhost:3001 | Observabilidad — trazas, costos, feedback |
+
+### 3. Cargar los documentos en ChromaDB
+
+Los documentos de `docs_kb/` se ingresan automáticamente al iniciar los contenedores (idempotente — no duplica si ya están cargados). Para forzar una re-ingesta manual:
+
+```bash
+docker compose exec api python scripts/ingest.py
+```
+
+### 4. Verificar que todo funciona
 
 ```bash
 curl -X POST http://localhost:8080/query \
@@ -27,6 +56,8 @@ curl -X POST http://localhost:8080/query \
   -H "Content-Type: application/json" \
   -d '{"query":"¿Qué debe cumplir un microservicio antes de exponerse como API interna?"}' | jq
 ```
+
+Respuesta esperada: JSON con `answer`, `citations` (con `chunk_id` y `snippet`), `participating_agents` y `trace_id`.
 
 ---
 
