@@ -2,6 +2,10 @@
 
 Prototipo de mesa de ayuda IA para Desarrollo TI con **agentes especializados** (Arquitectura, Seguridad, Producción) que colaboran a través de un **orquestador LangGraph**, responden con **trazabilidad**, **anti-alucinación verificable** y una **capa de seguridad anti-prompt-injection** propia de banca.
 
+## Demo
+
+[![Ver demo en Loom](https://cdn.loom.com/sessions/thumbnails/11bac8e48c214174a494ca2dcf649507-with-play.gif)](https://www.loom.com/share/11bac8e48c214174a494ca2dcf649507)
+
 ---
 
 ## TL;DR — Cómo correrlo
